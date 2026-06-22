@@ -4,9 +4,14 @@
   "description": "تطبيق الجوكر المنافس والبديل لـ جواكر مع لعبة الترنيب الاحترافية والدردشة وسيناريو اللعب دون اتصال بالإنترنت.",
   "icons": [
     {
-      "src": "https://api.dicebear.com/7.x/bottts/svg?seed=JokerLogoMain",
-      "type": "image/svg+xml",
-      "sizes": "192x192 512x512"
+      "src": "/joker_logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/joker_logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
     }
   ],
   "start_url": "/",

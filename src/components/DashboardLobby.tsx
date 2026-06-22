@@ -58,6 +58,49 @@ export default function DashboardLobby({
   const [privateRoomName, setPrivateRoomName] = useState('');
   const [privateRoomPass, setPrivateRoomPass] = useState('');
   const [sharedRoomCode, setSharedRoomCode] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+
+  // PWA & Installation states
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isAlreadyInstalled, setIsAlreadyInstalled] = useState(false);
+  const [showPwaGuide, setShowPwaGuide] = useState(false);
+  
+  const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+
+  React.useEffect(() => {
+    const handleBeforeInstall = (e: any) => {
+      // Prevent browser default prompt
+      e.preventDefault();
+      // Store event
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
+    // Detect if already installed / standalone mode
+    if (typeof window !== 'undefined') {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                          (window.navigator as any).standalone === true;
+      setIsAlreadyInstalled(isStandalone);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
+  }, []);
+
+  const handleInstallPWA = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsAlreadyInstalled(true);
+        setDeferredPrompt(null);
+      }
+    } else {
+      setShowPwaGuide(true);
+    }
+  };
 
   // Daily Spin wheel states
   const [isSpinning, setIsSpinning] = useState(false);
@@ -182,8 +225,9 @@ export default function DashboardLobby({
           {/* Top Right Icons */}
           <div className="flex items-center gap-2.5">
             <button 
-              onClick={() => alert('مشاركة الطاولة النشطة وإرسال الأكواد للأصدقاء!')} 
+              onClick={() => setShowShareModal(true)} 
               className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+              title="مشاركة اللعبة"
             >
               <Send size={19} className="rotate-45" />
             </button>
@@ -301,12 +345,9 @@ export default function DashboardLobby({
 
               {/* Invite button */}
               <button 
-                onClick={() => {
-                  const rCode = Math.floor(100000 + Math.random() * 900000).toString();
-                  navigator.clipboard.writeText(`انضم لطاولتي بـ كود الجوكر: ${rCode}`);
-                  alert('تم نسخ رابط الدعوة الخاص بك! الكود: ' + rCode);
-                }}
+                onClick={() => setShowShareModal(true)}
                 className="flex flex-col items-center gap-1 group cursor-pointer"
+                title="دعوة للألعاب والرابط الدائم"
               >
                 <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-purple-600 via-violet-600 to-cyan-500 p-0.5 shadow-[0_4px_15px_rgba(124,58,237,0.3)] group-hover:scale-105 transition-transform">
                   <div className="w-full h-full bg-[#17171d] rounded-full flex items-center justify-center text-xl">
@@ -353,6 +394,122 @@ export default function DashboardLobby({
                 {/* Clapperboard emoji badge */}
                 <span className="absolute -top-1 -right-1 text-base">🎬</span>
               </div>
+            </div>
+
+            {/* NEW HIGH-FIDELITY EXTREMELY CLEAR PWA INSTALLATION BANNER */}
+            <div className="bg-gradient-to-br from-[#12131b] to-[#1e1a2c] border border-amber-500/30 rounded-2xl p-4 shadow-xl relative overflow-hidden text-right" dir="rtl">
+              <div className="absolute top-0 right-0 w-28 h-28 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+              
+              <div className="flex items-start gap-4">
+                {/* Official Joker Logo Icon in square with beautiful styling */}
+                <div className="w-14 h-14 rounded-xl border-2 border-amber-500 overflow-hidden shadow-lg shrink-0 bg-slate-900 relative">
+                  <img 
+                    src="/joker_logo.jpg" 
+                    className="w-full h-full object-cover" 
+                    alt="شعار تطبيق الجوكر" 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/bottts/svg?seed=JokerLogoMain';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center">
+                    <span className="text-[7.5px] font-black text-amber-400 bg-black/70 px-1.5 rounded-t mb-0.5">الجوكر الأصلي</span>
+                  </div>
+                </div>
+
+                {/* Info Text */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5 justify-start">
+                    <span className="inline-block w-20 h-5 text-center bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full font-bold text-[8.5px] py-0.5">تثبيت وتنزيل 📥</span>
+                    <h4 className="text-xs font-black text-white">تحميل وتثبيت ومختصر اللعبة بـ اللوجو الرسمي</h4>
+                  </div>
+                  <p className="text-[10px] text-slate-300 mt-1 leading-relaxed font-sans font-medium">
+                    احصل على تطبيق الجوكر الأصلي على شاشتك الرئيسية بهاتفك أو كمبيوترك بـ اللوجو الرسمي! يمكنك الدخول للألعاب بلمسة واحدة سريعة، وبأقصى أداء دون تقطيع.
+                  </p>
+                </div>
+              </div>
+
+              {/* Install and Open Actions */}
+              <div className="mt-3 pt-3 border-t border-white/5">
+                {isInIframe ? (
+                  <div className="space-y-2">
+                    <div className="bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[10px] font-medium p-3 rounded-xl leading-relaxed">
+                      ⚠️ <span className="font-extrabold text-white">تنبيه بخصوص التثبيت بـ اللوجو:</span>
+                      <p className="mt-1">أنت تتصفح اللعبة حالياً داخل نافذة تجريبية فرعية. للحصول على التطبيق بـ اللوجو والاسم الأيقوني الكامل على شاشة جهازك بمفهوم (PWA)، يجب تحميل اللعبة بالرابط المباشر في متصفحك الرسمي!</p>
+                    </div>
+                    <a
+                      href="https://ais-pre-ojbsuanlt3am3bqlekp5ge-576709235285.europe-west2.run.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => playCoinSound()}
+                      className="w-full py-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black rounded-xl hover:scale-[1.01] active:scale-95 transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+                    >
+                      🚀 افتح اللعبة في متصفح خارجي للتثبيت الفوري
+                    </a>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {isAlreadyInstalled ? (
+                      <div className="text-center py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold rounded-xl text-[10px]">
+                        🎉 مبروك! أنت تقوم بالتشغيل حالياً عبر تطبيق الجوكر الأصلي المثبت بجهازك!
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => {
+                              playCoinSound();
+                              handleInstallPWA();
+                            }}
+                            className="py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black rounded-xl hover:scale-[1.01] active:scale-95 transition-all text-[11px] flex items-center justify-center gap-1 cursor-pointer shadow-lg"
+                          >
+                            <Download size={12} className="text-slate-950" />
+                            <span>تثبيت اللعبة باللوجو</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              playCoinSound();
+                              setShowPwaGuide(!showPwaGuide);
+                            }}
+                            className="py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-[11px] transition-colors cursor-pointer"
+                          >
+                            ❓ كيف يتم التثبيت؟
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Animated/Step-by-step PWA Guide dropdown */}
+              <AnimatePresence>
+                {showPwaGuide && !isInIframe && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden bg-[#181822] rounded-xl border border-white/5 mt-3 p-3 text-right text-[10px] text-slate-300 space-y-2 leading-relaxed"
+                  >
+                    <p className="font-black text-amber-400 text-center text-[11px] mb-1">طرق تثبيت الجوكر بثوانٍ معدودة ⏱️</p>
+                    
+                    <div className="border-r-2 border-amber-500 pr-2 py-1 space-y-1">
+                      <p className="font-bold text-white">📱 مستخدمي أندرويد (متصفح Chrome):</p>
+                      <p>1. اضغط على زر "تثبيت اللعبة باللوجو" في الأعلى.</p>
+                      <p>2. إذا لم يظهر، اضغط على النقاط الثلاث <span className="font-bold text-white">(⋮)</span> بالأعلى يسار الكروم.</p>
+                      <p>3. اختر <span className="text-amber-400 font-bold">"إضافة للشاشة الرئيسية"</span> أو "تثبيت التطبيق".</p>
+                    </div>
+
+                    <div className="border-r-2 border-purple-500 pr-2 py-1 space-y-1">
+                      <p className="font-bold text-white">🍏 مستخدمي آيفون / آيباد (متصفح Safari):</p>
+                      <p>1. افتح رابط اللعبة في متصفح Safari الرسمي لهواتف آبل.</p>
+                      <p>2. اضغط على زر <span className="text-purple-400 font-bold">المشاركة (📤)</span> أسفل الشاشة أو أعلاها.</p>
+                      <p>3. قم باختيار <span className="text-amber-400 font-bold">"إضافة إلى الشاشة الرئيسية (Add to Home Screen)"</span>.</p>
+                      <p>4. مبروك! سيظهر تطبيق اللعبة فوراً على هاتفك بـ اللوجو الذهبي الأصلي!</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* MAIN TARNEEB CENTRAL GAME CARD WITH FANNED CARDS POPPING OUT */}
@@ -598,40 +755,7 @@ export default function DashboardLobby({
                 <span>عجلة الحظ اليومية الأسبوعية</span>
                 <Sparkles size={12} className="text-yellow-500" />
               </h4>
-              <p className="text-slate-400 text-[9px] mb-3">اضغط لتدوير العجلة لتربح ذهب طاولتك مجاناً!</p>
-
-              {/* Wheel graphics */}
-              <div className="relative w-32 h-32 mx-auto my-2 flex items-center justify-center">
-                <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-lg z-20 pointer-events-none">🔻</span>
-                <motion.div
-                  animate={{ rotate: wheelRotation }}
-                  transition={isSpinning ? { duration: 3.5, ease: "easeOut" } : { duration: 0 }}
-                  className="w-full h-full rounded-full border-2 border-amber-500 relative overflow-hidden bg-slate-950 flex items-center justify-center"
-                >
-                  <div className="absolute font-sans text-[8px] font-bold text-amber-500 flex flex-col justify-between h-full py-2 rotate-0">
-                    <span>1000 👑</span>
-                    <span>100 🎖️</span>
-                  </div>
-                  <div className="absolute font-sans text-[8px] font-bold text-amber-500 flex flex-col justify-between h-full py-2 rotate-60">
-                    <span>200 💰</span>
-                    <span>50 🥿</span>
-                  </div>
-                  <div className="absolute font-sans text-[8px] font-bold text-amber-500 flex flex-col justify-between h-full py-2 rotate-120">
-                    <span>500 ✨</span>
-                    <span>300 ⭐</span>
-                  </div>
-                  <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-[9px] text-slate-950 font-black z-10 shadow">
-                    لف
-                  </div>
-                </motion.div>
-              </div>
-
-              {spinResult && (
-                <div className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold p-1.5 rounded-xl mt-2 border border-emerald-500/10">
-                  {spinResult}
-                </div>
-              )}
-
+              <p className="text-slate-400 text-[9px] mb-3">اضغط لتدوير العجلة لتربح هدايا وذهب مجاني!</p>
               {spinClaimed ? (
                 <p className="text-[8.5px] text-slate-500 mt-2 font-bold">تم المطالبة بحظك لليوم بنجاح! عد غداً.</p>
               ) : (
@@ -671,7 +795,7 @@ export default function DashboardLobby({
                         ) : (
                           <span className="text-amber-500">قيد التقدم ({qst.progress}/{qst.target})</span>
                         )}
-                        <span className="text-slate-500">جائزة مضمونة</span>
+                        <span className="text-slate-500 font-bold">جائزة مضمونة</span>
                       </div>
                     </div>
                   );
@@ -750,7 +874,7 @@ export default function DashboardLobby({
             <span className="text-[8.5px] font-bold font-sans mt-1">الألعاب</span>
           </button>
 
-          {/* C. FLOATING JESTER HOME BUTTON (STANDOUT CENTRAL VISUAL ACCENT WITH TRI-TASSEL JESTER HAT) */}
+          {/* C. FLOATING JESTER HOME BUTTON (STANDOUT CENTRAL VISUAL ACCENT) */}
           <div className="relative -top-3 px-1 z-50">
             <button
               onClick={() => setActiveTab('lobby')}
@@ -758,16 +882,13 @@ export default function DashboardLobby({
               className="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-400 p-1 shadow-[0_6px_20px_rgba(245,158,11,0.45)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
             >
               <div className="w-full h-full bg-[#111115] rounded-full flex items-center justify-center relative overflow-hidden">
-                {/* Custom glowing Jester Hat Vector / Emoji */}
                 <span className="text-2xl filter drop-shadow animate-bounce" style={{ animationDuration: '3s' }}>
                   🤡
                 </span>
-                
                 {/* Ring highlight */}
                 <div className="absolute inset-0 border border-amber-500/50 rounded-full pointer-events-none" />
               </div>
             </button>
-            {/* Labeled 'Home' or 'الرئيسية' */}
             <span className="block text-[8px] font-black text-amber-400 text-center mt-1 select-none whitespace-nowrap">
               الرئيسية
             </span>
@@ -803,6 +924,115 @@ export default function DashboardLobby({
 
         </div>
       </div>
+
+      {/* GORGEOUS HIGH-FIDELITY ARABIZED SHARE/PERMANENT LINK MODAL */}
+      <AnimatePresence>
+        {showShareModal && (
+          <div className="fixed inset-0 bg-[#07070a]/90 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-hidden" dir="rtl">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 10 }}
+              className="bg-[#121217] border border-amber-500/30 rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl relative overflow-hidden text-white"
+            >
+              {/* Gold light accent decoration */}
+              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400" />
+              
+              {/* Close Icon button */}
+              <button 
+                onClick={() => setShowShareModal(false)}
+                className="absolute top-3 left-3 w-7 h-7 rounded-lg bg-slate-800/80 text-slate-400 hover:text-white transition-colors flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+
+              <div className="w-12 h-12 rounded-full bg-amber-500/15 flex items-center justify-center mx-auto text-2xl shadow mb-3">
+                🔗
+              </div>
+
+              <h3 className="text-base font-black text-white leading-snug">
+                دعوة الأصدقاء للعب
+              </h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed px-2">
+                شارك أو انسخ الرابط المباشر للعبة الجوكر لتبدأ المتعة واللعب فوراً مع رفقائك!
+              </p>
+
+              {/* Box displaying the permanent link beautifully */}
+              <div className="bg-[#181824] border border-slate-800 rounded-xl p-3 my-4 text-center relative overflow-hidden">
+                <span className="text-[10px] text-amber-500 font-bold block mb-1">الرابط المباشر لتثبيت ولعب اللعبة 📥</span>
+                <input
+                  type="text"
+                  readOnly
+                  value={typeof window !== 'undefined' ? window.location.origin : 'https://ais-pre-ojbsuanlt3am3bqlekp5ge-576709235285.europe-west2.run.app'}
+                  onClick={(e) => {
+                    (e.target as HTMLInputElement).select();
+                  }}
+                  className="w-full text-center bg-slate-900 border border-amber-500/20 rounded px-2 py-1.5 text-xs font-mono font-bold text-amber-400 focus:outline-none focus:border-amber-400 select-all"
+                />
+                <span className="block text-[8px] text-slate-500 mt-1">اضغط على النص وسيقوم بتحديد الرابط بالكامل لنسخه بسهولة</span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-4 mt-4">
+                {/* 1. Direct Copy Button */}
+                <button
+                  onClick={() => {
+                    const shareUrl = typeof window !== 'undefined' ? window.location.origin : 'https://ais-pre-ojbsuanlt3am3bqlekp5ge-576709235285.europe-west2.run.app';
+                    try {
+                      if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(shareUrl)
+                          .then(() => {
+                            playCoinSound();
+                            alert("تم نسخ الرابط المباشر بنجاح! يمكنك الآن إرساله لأي شخص بالواتساب أو تليغرام ليلعب معك!");
+                          })
+                          .catch(() => {
+                            alert("يرجى تحديد النص من المربع أعلاه وبدء نسخه يدوياً بكل سهولة!");
+                          });
+                      } else {
+                        alert("يرجى تحديد النص من المربع أعلاه وبدء نسخه يدوياً بكل سهولة!");
+                      }
+                    } catch (err) {
+                      alert("يرجى تحديد النص من المربع أعلاه وبدء نسخه يدوياً بكل سهولة!");
+                    }
+                  }}
+                  className="w-full py-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black rounded-xl hover:scale-[1.02] active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer shadow"
+                >
+                  📥 نسخ الرابط المباشر
+                </button>
+
+                {/* 2. Direct WhatsApp Share button */}
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                    `تعال العب معي في لعبة الجوكر أونلاين على المتصفح مباشرة! الرابط المباشر للعب والتثبيت: ${
+                      typeof window !== 'undefined' ? window.location.origin : 'https://ais-pre-ojbsuanlt3am3bqlekp5ge-576709235285.europe-west2.run.app'
+                    }`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 bg-[#25d366] hover:bg-[#128c7e] text-slate-950 font-black rounded-xl hover:scale-[1.02] active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer shadow inline-flex"
+                >
+                  🟢 مشاركة عبر واتساب
+                </a>
+
+                {/* 3. Dismiss */}
+                <button
+                   onClick={() => setShowShareModal(false)}
+                   className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors text-xs cursor-pointer"
+                >
+                  إغلاق النافذة
+                </button>
+              </div>
+
+              {/* Informative footer inside card */}
+              <div className="text-[9.5px] text-slate-400 mt-4 leading-normal text-right space-y-1 bg-[#1a1b24] p-3 rounded-lg border border-white/5">
+                <p className="text-amber-500 font-bold text-[10px] text-center mb-1">كيفية التثبيت كتطبيق (PWA):</p>
+                <p>📱 <span className="font-bold text-white">لهواتف أندرويد (Chrome):</span> افتح الرابط واضغط على الـ 3 نقاط أعلى اليسار ثم اختر <span className="text-amber-400">"إضافة إلى الشاشة الرئيسية"</span>.</p>
+                <p>🍏 <span className="font-bold text-white">لهواتف آيفون (Safari):</span> افتح الرابط واضغط على زر <span className="text-amber-400">"مشاركة"</span> بالأسفل ثم اختر <span className="text-amber-400">"أضف إلى الشاشة الرئيسية"</span>.</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
