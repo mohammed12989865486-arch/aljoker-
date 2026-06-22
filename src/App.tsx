@@ -9,6 +9,7 @@ import SplashIntro from './components/SplashIntro';
 import DashboardLobby from './components/DashboardLobby';
 import TarneebGame from './components/TarneebGame';
 import GameIntroLoader from './components/GameIntroLoader';
+import PWAInstaller from './components/PWAInstaller';
 import { UserProfile } from './types';
 import { Dialect } from './utils/audio';
 
@@ -173,6 +174,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white selection:bg-emerald-500 selection:text-slate-950">
+      
+      {/* PWA Phone Installation Assistant Bar / Banner */}
+      <PWAInstaller />
       
       {/* Upper Navigation Strip for logged in users */}
       {isLoggedIn && (

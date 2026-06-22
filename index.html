@@ -25,13 +25,17 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- Register service worker -->
+    <!-- Register PWA Service Worker for installer support and offline play -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
-            .then((reg) => console.log('Service Worker Registered successfully code:', reg.scope))
-            .catch((err) => console.warn('Service Worker registration failed:', err));
+            .then((registration) => {
+              console.log('[PWA] Service Worker registered under scope:', registration.scope);
+            })
+            .catch((error) => {
+              console.error('[PWA] Service Worker registration failed:', error);
+            });
         });
       }
     </script>

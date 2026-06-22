@@ -14,20 +14,20 @@ export default function GameIntroLoader({ onComplete }: GameIntroLoaderProps) {
   const [stage, setStage] = useState<'black_logo' | 'red_felt_loading'>('black_logo');
   const [progress, setProgress] = useState(0);
 
-  // Stage 1 timer: 3 seconds (3000ms) on Black Screen
+  // Stage 1 timer: 1 second on Black Screen
   useEffect(() => {
     const timer = setTimeout(() => {
       setStage('red_felt_loading');
-    }, 3000);
+    }, 1000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Stage 2: Loading progress over 3.5 seconds
+  // Stage 2: Loading progress over 1.2 seconds
   useEffect(() => {
     if (stage !== 'red_felt_loading') return;
 
-    const duration = 3500; // 3.5 seconds to load
-    const intervalTime = 50;
+    const duration = 1200; // 1.2 seconds to load
+    const intervalTime = 40;
     const step = 100 / (duration / intervalTime);
 
     const interval = setInterval(() => {
