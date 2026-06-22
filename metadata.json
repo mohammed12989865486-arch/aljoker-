@@ -1,0 +1,6 @@
+{
+  "name": "الجوكر",
+  "description": "تطبيق ألعاب الورق العربي المتكامل المنافس لجواكر مع لعبة الترنيب الاحترافية والدردشة والرموز التفاعلية ومتجر المتكامل مع دعم PWA لتنزيل اللعبة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

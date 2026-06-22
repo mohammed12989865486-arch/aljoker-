@@ -1,0 +1,17 @@
+{
+  "short_name": "الجوكر",
+  "name": "تطبيق الجوكر - ألعاب ورق كوتشينة تفاعلية",
+  "description": "تطبيق الجوكر المنافس والبديل لـ جواكر مع لعبة الترنيب الاحترافية والدردشة وسيناريو اللعب دون اتصال بالإنترنت.",
+  "icons": [
+    {
+      "src": "https://api.dicebear.com/7.x/bottts/svg?seed=JokerLogoMain",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#020617",
+  "theme_color": "#f59e0b",
+  "display": "standalone",
+  "orientation": "portrait"
+}
